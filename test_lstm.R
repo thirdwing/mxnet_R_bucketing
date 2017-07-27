@@ -1,6 +1,6 @@
 require("mxnet")
 
-source("mx_io_bucket_iter.R")
+source("mx.io.bucket.iter.R")
 source("rnn_bucket_setup.R")
 source("rnn_bucket_train.R")
 
@@ -14,15 +14,15 @@ vocab <- length(corpus_bucketed_test$dic)
 ### Create iterators
 batch_size = 64
 
-X_iter_train <- mx_io_bucket_iter(buckets = corpus_bucketed_train$buckets,
-                                  batch_size = batch_size,
-                                  data_mask_element = 0,
-                                  shuffle = TRUE)
+train.data <- mx.io.bucket.iter(buckets = corpus_bucketed_train$buckets,
+                                batch.size = batch_size,
+                                data.mask.element = 0,
+                                shuffle = TRUE)
 
-X_iter_test <- mx_io_bucket_iter(buckets = corpus_bucketed_test$buckets,
-                                 batch_size = batch_size,
-                                 data_mask_element = 0,
-                                 shuffle = FALSE)
+eval.data <- mx.io.bucket.iter(buckets = corpus_bucketed_test$buckets,
+                               batch.size = batch_size,
+                               data.mask.element = 0,
+                               shuffle = FALSE)
 
 num.label = 2
 num.embed = 16
@@ -38,9 +38,6 @@ initializer = mx.init.Xavier(rnd_type = "gaussian",
 dropout = 0.25
 verbose = TRUE
 
-batch.end.callback <- mx.callback.log.train.metric(period = 50)
-epoch.end.callback <- mx.callback.log.train.metric(period = 1)
-
 devices <- list(mx.cpu())
 end.round = 16
 
@@ -53,8 +50,8 @@ optimizer <- mx.opt.create("adadelta",
 
 num.rnn.layer <- 2
 
-model_sentiment_lstm <- mx.rnn.buckets(train.data =  X_iter_train,
-                                       eval.data = X_iter_test,
+model_sentiment_lstm <- mx.rnn.buckets(train.data =  train.data,
+                                       eval.data = eval.data,
                                        begin.round = 1,
                                        end.round = end.round,
                                        ctx = devices,
@@ -70,8 +67,8 @@ model_sentiment_lstm <- mx.rnn.buckets(train.data =  X_iter_train,
                                        initializer = initializer,
                                        dropout = dropout,
                                        config = "seq-to-one",
-                                       batch.end.callback = batch.end.callback,
-                                       epoch.end.callback = epoch.end.callback,
+                                       batch.end.callback = mx.callback.log.train.metric(period = 50),
+                                       epoch.end.callback = NULL,
                                        verbose = TRUE)
 
 mx.model.save(model_sentiment_lstm, prefix = "model_sentiment_lstm", iteration = end.round)
