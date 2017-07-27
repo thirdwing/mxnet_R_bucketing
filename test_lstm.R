@@ -14,15 +14,19 @@ vocab <- length(corpus_bucketed_test$dic)
 ### Create iterators
 batch_size = 64
 
-train.data <- mx.io.bucket.iter(buckets = corpus_bucketed_train$buckets,
-                                batch.size = batch_size,
-                                data.mask.element = 0,
-                                shuffle = TRUE)
+train.data <- mx_io_bucket_iter(
+  buckets = corpus_bucketed_train$buckets,
+  batch_size = batch_size,
+  data_mask_element = 0,
+  shuffle = TRUE
+)
 
-eval.data <- mx.io.bucket.iter(buckets = corpus_bucketed_test$buckets,
-                               batch.size = batch_size,
-                               data.mask.element = 0,
-                               shuffle = FALSE)
+eval.data <- mx_io_bucket_iter(
+  buckets = corpus_bucketed_test$buckets,
+  batch_size = batch_size,
+  data_mask_element = 0,
+  shuffle = FALSE
+)
 
 num.label = 2
 num.embed = 16
