@@ -86,7 +86,8 @@ BucketIter <-setRefClass("BucketIter",
                                          label = mx.nd.array(label),
                                          data.mask = mx.nd.array(data_mask),
                                          data.mask.array = mx.nd.array(data_mask_array)))
-                           }
+                           },
+                           finalize = function() {}
                          ))
 
 #

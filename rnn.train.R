@@ -206,8 +206,7 @@ mx.model.train.rnn.buckets <- function(ctx,
       }
       eval.data$reset()
       while (eval.data$iter.next()) {
-        seq_len <- as.integer(names(eval.data$bucketID()))
-        
+
         # Get input data slice
         dlist <- eval.data$value()
         slices <- lapply(dlist[input.names], function(input) {
@@ -219,7 +218,7 @@ mx.model.train.rnn.buckets <- function(ctx,
           )
         })
         
-        symbol = sym_list[[names(eval.data$bucketID())]]
+        symbol = sym_list[[names(eval.data$bucketID)]]
         
         train.execs <- lapply(1:ndevice, function(i) {
           if (ndevice > 1)
@@ -286,7 +285,7 @@ mx.model.train.rnn.buckets <- function(ctx,
       eval.metric <- NULL
     }
     # get the model out
-    model <- mx.model.extract.model(symbol, train.execs)
+    model <- mxnet:::mx.model.extract.model(symbol, train.execs)
     
     epoch_continue <- TRUE
     if (!is.null(epoch.end.callback)) {

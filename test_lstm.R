@@ -1,8 +1,7 @@
 require("mxnet")
 
 source("mx.io.bucket.iter.R")
-source("rnn_bucket_setup.R")
-source("rnn_bucket_train.R")
+source("rnn.R")
 
 corpus_bucketed_train <-
   readRDS(file = "corpus_bucketed_train_100_200_300_500_800_left.rds")
@@ -22,10 +21,17 @@ train.data <-
     shuffle = TRUE
   )
 
+eval.data <-
+  mx.io.bucket.iter(
+    buckets = corpus_bucketed_test$buckets,
+    batch.size = batch_size,
+    data.mask.element = 0,
+    shuffle = FALSE
+  )
+
 num.label = 2
 num.embed = 16
 num.hidden = 24
-update.period = 1
 
 metric <- mx.metric.accuracy
 
@@ -36,8 +42,7 @@ initializer = mx.init.Xavier(rnd_type = "gaussian",
 dropout = 0.25
 verbose = TRUE
 
-devices <- list(mx.cpu())
-end.round = 3
+end.round = 1
 
 optimizer <- mx.opt.create(
   "adadelta",
@@ -59,7 +64,7 @@ model_sentiment_lstm <- mx.rnn.buckets(
 #  eval.data = eval.data,
   begin.round = 1,
   end.round = end.round,
-  ctx = devices,
+  ctx = mx.cpu(),
   metric = metric,
   optimizer = optimizer,
   kvstore = "local",
@@ -68,12 +73,10 @@ model_sentiment_lstm <- mx.rnn.buckets(
   num.hidden = num.hidden,
   num.label = num.label,
   input.size = input.size,
-  update.period = 1,
   initializer = initializer,
   dropout = dropout,
   config = "seq-to-one",
   batch.end.callback = mx.callback.log.train.metric(period = 50),
-  epoch.end.callback = NULL,
   verbose = TRUE
 )
 
