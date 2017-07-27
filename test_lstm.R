@@ -41,20 +41,6 @@ verbose = TRUE
 batch.end.callback <- mx.callback.log.train.metric(period = 50)
 epoch.end.callback <- mx.callback.log.train.metric(period = 1)
 
-seq.len <- 2
-
-rnn_graph <- rnn.unroll(seq.len = seq.len,
-                        num.rnn.layer = 1,
-                        num.hidden = num.hidden,
-                        input.size = input.size,
-                        num.embed = num.embed,
-                        num.label = num.label,
-                        dropout = dropout,
-                        ignore_label = 0,
-                        config = "seq-to-one")
-
-graph.viz(rnn_graph, type = "graph", direction = "TD")
-
 devices <- list(mx.cpu())
 end.round = 16
 
