@@ -192,28 +192,16 @@ mx.rnn.buckets <- function(train.data,
   input.shape <- lapply(train.data$value(), dim)
   input.shape <- input.shape[names(input.shape) %in% arg.names]
   
-  infer_shapes <- symbol$infer.shape(input.shape)
-  arg.params <-
-    mx.init.create(initializer,
-                   infer_shapes$arg.shapes,
-                   mx.cpu(),
-                   skip.unknown = TRUE)
-  aux.params <-
-    mx.init.create(initializer,
-                   infer_shapes$aux.shapes,
-                   mx.cpu(),
-                   skip.unknown = TRUE)
+  params <- mx.model.init.params(symbol, input.shape, NULL, initializer, mx.cpu())
   
-  kvstore <-
-    mxnet:::mx.model.create.kvstore(kvstore, params$arg.params, length(ctx), verbose =
-                                      verbose)
+  kvstore <- mxnet:::mx.model.create.kvstore(kvstore, params$arg.params, length(ctx), verbose)
   
   ### Execute training -  rnn.model.R
   model <- mx.model.train.rnn.buckets(
     sym_list = sym_list,
     input.shape = input.shape,
-    arg.params = arg.params,
-    aux.params = aux.params,
+    arg.params = params$arg.params,
+    aux.params = params$aux.params,
     optimizer = optimizer,
     train.data = train.data,
     eval.data = eval.data,
@@ -230,24 +218,6 @@ mx.rnn.buckets <- function(train.data,
   return(model)
 }
 
-
-# slice the shape on the highest dimension
-mx.model.slice.shape <- function(shape, nsplit) {
-  ndim <- length(shape)
-  batchsize <- shape[[ndim]]
-  step <- as.integer((batchsize + nsplit - 1) / nsplit)
-  lapply(0:(nsplit - 1), function(k) {
-    begin = min(k * step, batchsize)
-    end = min((k + 1) * step, batchsize)
-    s <- shape
-    s[[ndim]] = end - begin
-    return(list(
-      begin = begin,
-      end = end,
-      shape = s
-    ))
-  })
-}
 
 # get the argument name of data and label
 mx.model.check.arguments <- function(symbol) {

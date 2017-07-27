@@ -59,6 +59,12 @@ cell.type = "lstm"
 
 config = "seq-to-one"
 
+ctx = mx.cpu()
+
+kvstore = "local"
+
+mx.set.seed(42)
+
 model_sentiment_lstm <- mx.rnn.buckets(
   train.data =  train.data,
 #  eval.data = eval.data,
