@@ -86,3 +86,24 @@ model_sentiment_lstm <- mx.rnn.buckets(
 mx.model.save(model_sentiment_lstm,
               prefix = "model_sentiment_lstm",
               iteration = end.round)
+
+source("rnn.infer.R")
+
+infer_iter = eval.data
+
+model = mx.model.load("model_sentiment_lstm", iteration = 3)
+
+ctx = mx.cpu()
+
+output_last_state = FALSE
+
+init.state = NULL
+
+cell.type = "lstm"
+
+config = "seq-to-one"
+
+pred <- mx.rnn.infer.buckets(infer_iter = eval.data,
+                                         model,
+                                         config,
+                                         ctx = mx.cpu()) 
