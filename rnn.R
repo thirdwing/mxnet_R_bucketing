@@ -146,7 +146,6 @@ mx.rnn.buckets <- function(train.data,
                            initializer = mx.init.uniform(0.01),
                            dropout = 0,
                            config = "one-to-one",
-                           kvstore = "local",
                            optimizer = 'sgd',
                            batch.end.callback = NULL,
                            epoch.end.callback = NULL,
@@ -169,8 +168,17 @@ mx.rnn.buckets <- function(train.data,
   }
   
   if (is.null(ctx)) ctx <- mx.ctx.default()
-  if (is.mx.context(ctx)) ctx <- list(ctx)
-  if (!is.list(ctx)) stop("ctx must be mx.context or list of mx.context")
+  if (!is.mx.context(ctx)) stop("ctx must be mx.context")
+  if (is.character(optimizer)) {
+    if (is.numeric(input.shape)) {
+      ndim <- length(input.shape)
+      batchsize = input.shape[[ndim]]      
+    } else {
+      ndim <- length(input.shape[[1]])
+      batchsize = input.shape[[1]][[ndim]]
+    }
+    optimizer <- mx.opt.create(optimizer, rescale.grad=(1/batchsize), ...)
+  }
   
   # get unrolled lstm symbol
   sym_list <- sapply(train.data$bucket.names, function(x) {
@@ -193,9 +201,7 @@ mx.rnn.buckets <- function(train.data,
   input.shape <- input.shape[names(input.shape) %in% arg.names]
   
   params <- mx.model.init.params(symbol, input.shape, NULL, initializer, mx.cpu())
-  
-  kvstore <- mxnet:::mx.model.create.kvstore(kvstore, params$arg.params, length(ctx), verbose)
-  
+
   ### Execute training -  rnn.model.R
   model <- mx.model.train.rnn.buckets(
     sym_list = sym_list,
@@ -205,7 +211,6 @@ mx.rnn.buckets <- function(train.data,
     optimizer = optimizer,
     train.data = train.data,
     eval.data = eval.data,
-    kvstore = kvstore,
     verbose = verbose,
     begin.round = begin.round,
     end.round = end.round,

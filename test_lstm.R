@@ -61,19 +61,16 @@ config = "seq-to-one"
 
 ctx = mx.cpu()
 
-kvstore = "local"
-
 mx.set.seed(42)
 
 model_sentiment_lstm <- mx.rnn.buckets(
   train.data =  train.data,
-#  eval.data = eval.data,
+  eval.data = eval.data,
   begin.round = 1,
   end.round = end.round,
   ctx = mx.cpu(),
   metric = metric,
   optimizer = optimizer,
-  kvstore = "local",
   num.rnn.layer = num.rnn.layer,
   num.embed = num.embed,
   num.hidden = num.hidden,
