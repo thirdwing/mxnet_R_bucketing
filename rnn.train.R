@@ -1,18 +1,11 @@
+library(mxnet)
+
+source("rnn.R")
+
 # Internal function to do multiple device training on RNN
-mx.model.train.rnn.buckets <- function(ctx,
-                                       sym_list,
-                                       arg.params,
-                                       aux.params,
-                                       input.shape,
-                                       begin.round,
-                                       end.round,
-                                       optimizer,
-                                       train.data,
-                                       eval.data,
-                                       metric,
-                                       epoch.end.callback,
-                                       batch.end.callback,
-                                       verbose = TRUE) {
+mx.model.train.rnn.buckets <- function(ctx, sym_list, arg.params, aux.params, input.shape, 
+  begin.round, end.round, optimizer, train.data, eval.data, metric, epoch.end.callback, 
+  batch.end.callback, verbose = TRUE) {
   symbol <- sym_list[[names(train.data$bucketID)]]
   
   input.names <- names(input.shape)
@@ -31,13 +24,8 @@ mx.model.train.rnn.buckets <- function(ctx,
     mx.nd.zeros(shape = shape, ctx = mx.cpu())
   })
   
-  train.exec <- mxnet:::mx.symbol.bind(
-    symbol = symbol,
-    arg.arrays = c(s, arg.params)[arg_update_idx],
-    aux.arrays = aux.params,
-    ctx = ctx,
-    grad.req = grad_req
-  )
+  train.exec <- mxnet:::mx.symbol.bind(symbol = symbol, arg.arrays = c(s, arg.params)[arg_update_idx], 
+    aux.arrays = aux.params, ctx = ctx, grad.req = grad_req)
   
   updaters <- mx.opt.get.updater(optimizer, train.exec$ref.arg.arrays)
   
@@ -51,13 +39,9 @@ mx.model.train.rnn.buckets <- function(ctx,
       dlist <- train.data$value()[input.names]
       symbol <- sym_list[[names(train.data$bucketID)]]
       
-      train.exec <- mxnet:::mx.symbol.bind(
-        symbol = symbol,
-        arg.arrays = c(dlist, train.exec$arg.arrays[arg.names])[arg_update_idx],
-        aux.arrays = train.exec$aux.arrays,
-        ctx = ctx,
-        grad.req = grad_req
-      )
+      train.exec <- mxnet:::mx.symbol.bind(symbol = symbol, arg.arrays = c(dlist, 
+        train.exec$arg.arrays[arg.names])[arg_update_idx], aux.arrays = train.exec$aux.arrays, 
+        ctx = ctx, grad.req = grad_req)
       
       mx.exec.forward(train.exec, is.train = TRUE)
       
@@ -83,7 +67,7 @@ mx.model.train.rnn.buckets <- function(ctx,
     
     if (!is.null(metric)) {
       result <- metric$get(train.metric)
-      if (verbose)
+      if (verbose) 
         message(paste0("[", iteration, "] Train-", result$name, "=", result$value))
     }
     
@@ -95,17 +79,13 @@ mx.model.train.rnn.buckets <- function(ctx,
       while (eval.data$iter.next()) {
         # Get input data slice
         dlist <- eval.data$value()[input.names]
-        symbol = sym_list[[names(eval.data$bucketID)]]
-        train.exec <- mxnet:::mx.symbol.bind(
-          symbol = symbol,
-          arg.arrays = c(dlist, train.exec$arg.arrays[arg.names])[arg_update_idx],
-          aux.arrays = train.exec$aux.arrays,
-          ctx = ctx,
-          grad.req = grad_req
-        )
-
+        symbol <- sym_list[[names(eval.data$bucketID)]]
+        train.exec <- mxnet:::mx.symbol.bind(symbol = symbol, arg.arrays = c(dlist, 
+          train.exec$arg.arrays[arg.names])[arg_update_idx], aux.arrays = train.exec$aux.arrays, 
+          ctx = ctx, grad.req = grad_req)
+        
         mx.exec.forward(train.exec, is.train = FALSE)
-
+        
         # copy outputs to CPU
         out.preds <- mx.nd.copyto(train.exec$ref.outputs[[1]], mx.cpu())
         
@@ -113,11 +93,12 @@ mx.model.train.rnn.buckets <- function(ctx,
           eval.metric <- metric$update(dlist$label, out.preds, eval.metric)
         }
       }
-
+      
       if (!is.null(metric)) {
         result <- metric$get(eval.metric)
         if (verbose) {
-          message(paste0("[", iteration, "] Validation-", result$name, "=", result$value))
+          message(paste0("[", iteration, "] Validation-", result$name, "=", 
+          result$value))
         }
       }
     } else {
