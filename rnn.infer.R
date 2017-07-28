@@ -43,16 +43,12 @@ mx.rnn.infer.buckets <- function(infer_iter,
   symbol <- sym_list[[names(infer_iter$bucketID)]]
   
   input.shape <- lapply(infer_iter$value(), dim)
-  input.shape <-
-    input.shape[names(input.shape) %in% arguments(symbol)]
+  input.shape <- input.shape[names(input.shape) %in% arguments(symbol)]
   
   infer_shapes <- symbol$infer.shape(input.shape)
   arg.params <- model$arg.params
   aux.params <- model$aux.params
   
-  #ndevice <- length(ctx)
-  
-  #symbol <- sym_list[[names(infer_iter$bucketID())]]
   input.names <- names(input.shape)
   arg.names <- names(arg.params)
   
@@ -78,44 +74,22 @@ mx.rnn.infer.buckets <- function(infer_iter,
   
   packer <- mxnet:::mx.nd.arraypacker()
   infer_iter$reset()
-  niter <- 1
   while (infer_iter$iter.next()) {
-    message(niter)
-    niter <- niter + 1
     # Get input data slice
-    dlist <- infer_iter$value()
-    
-    
-    # Slice inputs for multi-devices
-    #slices <- lapply(dlist[input.names], function(input) {
-    #  mx.nd.SliceChannel(
-    #    data = input,
-    #    num_outputs = ndevice,
-    #    axis = 0,
-    #    squeeze_axis = F
-    #  )
-    #})
+    dlist <- infer_iter$value()[input.names]
     
     symbol <- sym_list[[names(infer_iter$bucketID)]]
     
-    #train.execs <- lapply(1:ndevice, function(i) {
-    #  if (ndevice > 1)
-    #    s <- lapply(slices, function(x)
-    #      x[[i]])
-    #  else
-    #    s <- slices
     texec <- mxnet:::mx.symbol.bind(
       symbol = symbol,
-      arg.arrays = c(s, train.execs$arg.arrays[arg.names])[arg_update_idx],
+      arg.arrays = c(dlist, train.execs$arg.arrays[arg.names])[arg_update_idx],
       aux.arrays = train.execs$aux.arrays,
       ctx = ctx,
       grad.req = grad_req
     )
-    #})
-    
-    #for (texec in train.execs) {
+
     mx.exec.forward(texec, is.train = FALSE)
-    #}
+
     out.preds <- mx.nd.copyto(texec$ref.outputs[[1]], mx.cpu())
     packer$push(out.preds)
   }
